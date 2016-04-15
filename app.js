@@ -1,7 +1,7 @@
 const WebSocketClient = require('websocket').client;
 const client = new WebSocketClient();
 
-const channel = 'simulation:m6nQXQ==';
+const channel = 'simulation:P3g_tg==';
 const roombaIP = 'roombots.mx.com';
 
 var _ = require('lodash');
@@ -35,13 +35,7 @@ const heartbeat = function(connection) {
     }, 1000);
 };
 
-//pass in response.payload and will log only full hit events
 function checkObj(obj) {
-    if (obj.bumper_right) {
-        console.log(obj.bumper_right);
-    } else if (obj.bumper_left) {
-        console.log(obj.bumper_left);
-    }
     var newObj = {
         farLeft: obj.light_bumper_left,
         midLeft: obj.light_bumper_left_front,
@@ -50,85 +44,120 @@ function checkObj(obj) {
         midRight: obj.light_bumper_right_front,
         farRight: obj.light_bumper_right
     };
-    var ret = false;
     if (!obj.status) {
         var midM = 3;
         var cenM = 6;
         var left = newObj.farLeft + newObj.midLeft * midM + newObj.centerLeft * cenM;
         var right = newObj.farRight + newObj.midRight * midM + newObj.centerRight * cenM;
-        return [left, right];
+        return [left, right, left + right];
     }
 }
 
-var count1, count2, count3, count10, count11;
+var driveMessage;
 
-function turn(obj) {
-    var vel, rad;
-    var check = checkObj(obj);
-    if (check) {
-        console.log(check);
-        if (check[0] === check[1]) {
-            vel = -500;
-            rad = 500;
-            count1 = moment().format('x').valueOf();
-        } else if (check[0] === 0) {
-            vel = -500;
-            rad = 500;
-            count10 = moment().format('x').valueOf();
-        } else if (check[1] === 0) {
-            vel = -500;
-            rad = -500;
-            count11 = moment().format('x').valueOf();
-        } else if (check[0] > check[1]) {
-            vel = -500;
-            rad = 500;
-            count2 = moment().format('x').valueOf();
-        } else if (check[0] < check[1]) {
-            vel = 500;
-            rad = -500;
-            count3 = moment().format('x').valueOf();
-        }
-    } else if (!check) {
-        if (count1 - moment().format('x').valueOf() > -100) {
-            vel = -500;
-            rad = 300;
-        } else if (count2 - moment().format('x').valueOf() > -100) {
-            vel = -500;
-            rad = 300;
-        } else if (count3 - moment().format('x').valueOf() > -100) {
-            vel = -500;
-            rad = -300;
-        } else if (count10 - moment().format('x').valueOf() > -165) {
-            vel = -500;
-            rad = -300;
-        } else if (count11 - moment().format('x').valueOf() > -165) {
-            vel = -500;
-            rad = 300;
-        } else {
-            vel = 800;
-            rad = 0;
-        }
-    }
-    var driveMessage = {
+function cb(e) {
+    driveMessage = {
         topic: channel,
         event: 'drive',
         ref: 15,
         payload: {
-            velocity: vel,
-            radius: rad
+            velocity: e[0],
+            radius: e[1]
         }
     };
-    return driveMessage;
 }
 
-//smaller the difference between arr0 and arr1 the  bigger the correction we want to make
-//increased radius slows turning
-//velocity 100 and radius 50 is an ok start
+function movement(arr) {
+    arr[arr.length] = [400, 0, 0];
+    for (var i = arr.length - 1; i >= 0; i--) {
+        for (var j = i - 1; j >= 0; j--) {
+            arr[i][2] += arr[j][2];
+        }
+    }
+    for (var k = arr.length - 1; k > 0; k--) {
+        arr[k][2] = arr[k - 1][2];
+    }
+    arr[0][2] = 0;
+    timer(arr);
+}
+
+function timer(arr) {
+    for (var i = 0, len = arr.length; i < len; i++) {
+        _.delay(cb, arr[i][2], arr[i]);
+    }
+}
+
+function move(hit) {
+  var s = hit[2];
+  var r = hit[1];
+  var l = hit[0];
+  var m;
+  if (r>l) {
+    m = 1;
+  } else {
+    m = -1;
+  }
+    if (s < 2) {
+        movement([
+            [-100, 0, 400],
+            [200, 10*m, 15]
+        ]);
+    } else if (s < 6) {
+        movement([
+            [-100, 0, 400],
+            [200, 10*m, 30]
+        ]);
+    } else if (s < 10) {
+        movement([
+            [-100, 0, 400],
+            [200, 10*m, 45]
+        ]);
+    } else if (s < 14) {
+        movement([
+            [-100, 0, 400],
+            [200, 10*m, 55]
+        ]);
+    } else {
+        movement([
+            [-100, 0, 400],
+            [200, 10*m, 75]
+        ]);
+    }
+}
+
 const drive = function(connection) {
     connection.on('message', function(message) {
         const response = JSON.parse(message.utf8Data);
 
-        var driveMessage = turn(response.payload);
+        //here we can analyze hits and determine what movements to run
+        //we can use a function to analyze hits
+        //we can use a function to determine movements base on hits
+        //movements must be called outside of this on message, this are only for hit detection
+
+        var hit = checkObj(response.payload);
+
+        if (hit) {
+            if (hit.length) {
+                console.log(hit);
+                var sum = hit[2];
+                var rt = hit[1];
+                var lt = hit[0];
+                move(hit);
+            }
+        }
+
+        // console.log(driveMessage);
+        if (!driveMessage || _.isUndefined(driveMessage.payload.velocity) || _.isUndefined(driveMessage.payload.radius)) {
+            driveMessage = {
+                topic: channel,
+                event: 'drive',
+                ref: 15,
+                payload: {
+                    velocity: 400,
+                    radius: 0
+                }
+            };
+        }
 
         connection.sendUTF(JSON.stringify(driveMessage));
 
