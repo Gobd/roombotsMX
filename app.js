@@ -68,29 +68,29 @@ function turn(obj) {
         console.log(check);
         if (check[0] === check[1]) {
             vel = -500;
-            rad = 300;
-            count1 = 200;
+            rad = 500;
+            count1 = 85;
         } else if (check[0] > check[1]) {
             vel = -500;
-            rad = 290;
-            count1 = 250/(check[0] - check[1]);
+            rad = 500;
+            count2 = 40;
         } else if (check[0] < check[1]) {
             vel = 500;
-            rad = 290;
-            count1 = 250/(check[1] - check[0]);
+            rad = 500;
+            count3 = 40;
         }
     } else if (!check) {
-        if (count1) {
+        if (count1 > 1) {
             vel = -500;
             rad = 300;
             count1--;
-        } else if (count2) {
+        } else if (count2 > 1) {
             vel = -500;
-            rad = 290;
+            rad = 300;
             count2--;
-        } else if (count3) {
+        } else if (count3 > 1) {
             vel = 500;
-            rad = 290;
+            rad = 300;
             count3--;
         } else {
             vel = 200;
