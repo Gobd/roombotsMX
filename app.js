@@ -1,10 +1,11 @@
 const WebSocketClient = require('websocket').client;
 const client = new WebSocketClient();
 
-const channel = 'simulation:TScbQg==';
+const channel = 'simulation:m6nQXQ==';
 const roombaIP = 'roombots.mx.com';
 
 var _ = require('lodash');
+var moment = require('moment');
 
 const phxJoin = function(connection) {
     const initMessage = {
@@ -36,11 +37,11 @@ const heartbeat = function(connection) {
 
 //pass in response.payload and will log only full hit events
 function checkObj(obj) {
-  if (obj.bumper_right) {
-    console.log(obj.bumper_right);
-  } else if (obj.bumper_left) {
-    console.log(obj.bumper_left);
-  }
+    if (obj.bumper_right) {
+        console.log(obj.bumper_right);
+    } else if (obj.bumper_left) {
+        console.log(obj.bumper_left);
+    }
     var newObj = {
         farLeft: obj.light_bumper_left,
         midLeft: obj.light_bumper_left_front,
@@ -59,7 +60,7 @@ function checkObj(obj) {
     }
 }
 
-var count1, count2, count3;
+var count1, count2, count3, count10, count11;
 
 function turn(obj) {
     var vel, rad;
@@ -69,31 +70,42 @@ function turn(obj) {
         if (check[0] === check[1]) {
             vel = -500;
             rad = 500;
-            count1 = 85;
+            count1 = moment().format('x').valueOf();
+        } else if (check[0] === 0) {
+            vel = -500;
+            rad = 500;
+            count10 = moment().format('x').valueOf();
+        } else if (check[1] === 0) {
+            vel = -500;
+            rad = -500;
+            count11 = moment().format('x').valueOf();
         } else if (check[0] > check[1]) {
             vel = -500;
             rad = 500;
-            count2 = 40;
+            count2 = moment().format('x').valueOf();
         } else if (check[0] < check[1]) {
             vel = 500;
-            rad = 500;
-            count3 = 40;
+            rad = -500;
+            count3 = moment().format('x').valueOf();
         }
     } else if (!check) {
-        if (count1 > 1) {
+        if (count1 - moment().format('x').valueOf() > -100) {
             vel = -500;
             rad = 300;
-            count1--;
-        } else if (count2 > 1) {
+        } else if (count2 - moment().format('x').valueOf() > -100) {
             vel = -500;
             rad = 300;
-            count2--;
-        } else if (count3 > 1) {
-            vel = 500;
+        } else if (count3 - moment().format('x').valueOf() > -100) {
+            vel = -500;
+            rad = -300;
+        } else if (count10 - moment().format('x').valueOf() > -165) {
+            vel = -500;
+            rad = -300;
+        } else if (count11 - moment().format('x').valueOf() > -165) {
+            vel = -500;
             rad = 300;
-            count3--;
         } else {
-            vel = 200;
+            vel = 800;
             rad = 0;
         }
     }
