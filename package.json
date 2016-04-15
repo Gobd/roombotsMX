@@ -1,0 +1,15 @@
+{
+  "name": "node_roombot",
+  "version": "0.0.1",
+  "description": "A simple starter project to connect to and drive a roombot",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ryan Moore, Luke Schunk",
+  "license": "ISC",
+  "dependencies": {
+    "lodash": "^4.11.1",
+    "websocket": "^1.0.22"
+  }
+}
