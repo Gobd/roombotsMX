@@ -1,7 +1,7 @@
 const WebSocketClient = require('websocket').client;
 const client = new WebSocketClient();
 
-const channel = 'simulation:P3g_tg==';
+const channel = 'simulation:1K1lFg==';
 const roombaIP = 'roombots.mx.com';
 
 var _ = require('lodash');
@@ -34,6 +34,11 @@ const heartbeat = function(connection) {
         connection.sendUTF(JSON.stringify(heartbeatMessage));
     }, 1000);
 };
+
+//distance = velocity * 33 / 1000
+//circumference = 2 * PI * radius - 1
+//percentage = distance/circumference
+
 
 function checkObj(obj) {
     var newObj = {
@@ -87,40 +92,58 @@ function timer(arr) {
     }
 }
 
+function play(hit) {
+    var s = hit[2];
+    var r = hit[1];
+    var l = hit[0];
+    var ret = [];
+    var m;
+    if (r > l) {
+        m = 1;
+    } else {
+        m = -1;
+    }
+    for (var i = 0; i < 50; i++) {
+        ret.push([200, 10 * m, s * 5]);
+    }
+}
+
+//larger radius means slower turning
+
 function move(hit) {
-  var s = hit[2];
-  var r = hit[1];
-  var l = hit[0];
-  var m;
-  if (r>l) {
-    m = 1;
-  } else {
-    m = -1;
-  }
+    var s = hit[2];
+    var r = hit[1];
+    var l = hit[0];
+    var m;
+    if (r > l) {
+        m = 1;
+    } else {
+        m = -1;
+    }
     if (s < 2) {
         movement([
-            [-100, 0, 400],
-            [200, 10*m, 15]
+            [-100, 0, 150],
+            [200, 22 * m, 15]
         ]);
     } else if (s < 6) {
         movement([
-            [-100, 0, 400],
-            [200, 10*m, 30]
+            [-100, 0, 150],
+            [200, 20 * m, 30]
         ]);
     } else if (s < 10) {
         movement([
-            [-100, 0, 400],
-            [200, 10*m, 45]
+            [-100, 0, 150],
+            [200, 18 * m, 45]
         ]);
     } else if (s < 14) {
         movement([
-            [-100, 0, 400],
-            [200, 10*m, 55]
+            [-100, 0, 150],
+            [200, 16 * m, 55]
         ]);
     } else {
         movement([
-            [-100, 0, 400],
-            [200, 10*m, 75]
+            [-100, 0, 150],
+            [200, 15 * m, 100]
         ]);
     }
 }
@@ -146,7 +169,6 @@ const drive = function(connection) {
             }
         }
 
-        // console.log(driveMessage);
         if (!driveMessage || _.isUndefined(driveMessage.payload.velocity) || _.isUndefined(driveMessage.payload.radius)) {
             driveMessage = {
                 topic: channel,
