@@ -1,7 +1,7 @@
 const WebSocketClient = require('websocket').client;
 const client = new WebSocketClient();
 
-const channel = 'simulation:1K1lFg==';
+const channel = 'simulation:GCNm8g==';
 const roombaIP = 'roombots.mx.com';
 
 var _ = require('lodash');
@@ -34,11 +34,6 @@ const heartbeat = function(connection) {
         connection.sendUTF(JSON.stringify(heartbeatMessage));
     }, 1000);
 };
-
-//distance = velocity * 33 / 1000
-//circumference = 2 * PI * radius - 1
-//percentage = distance/circumference
-
 
 function checkObj(obj) {
     var newObj = {
@@ -92,24 +87,6 @@ function timer(arr) {
     }
 }
 
-function play(hit) {
-    var s = hit[2];
-    var r = hit[1];
-    var l = hit[0];
-    var ret = [];
-    var m;
-    if (r > l) {
-        m = 1;
-    } else {
-        m = -1;
-    }
-    for (var i = 0; i < 50; i++) {
-        ret.push([200, 10 * m, s * 5]);
-    }
-}
-
-//larger radius means slower turning
-
 function move(hit) {
     var s = hit[2];
     var r = hit[1];
@@ -120,42 +97,18 @@ function move(hit) {
     } else {
         m = -1;
     }
-    if (s < 2) {
-        movement([
-            [-100, 0, 150],
-            [200, 22 * m, 15]
-        ]);
-    } else if (s < 6) {
-        movement([
-            [-100, 0, 150],
-            [200, 20 * m, 30]
-        ]);
-    } else if (s < 10) {
-        movement([
-            [-100, 0, 150],
-            [200, 18 * m, 45]
-        ]);
-    } else if (s < 14) {
-        movement([
-            [-100, 0, 150],
-            [200, 16 * m, 55]
-        ]);
-    } else {
-        movement([
-            [-100, 0, 150],
-            [200, 15 * m, 100]
-        ]);
-    }
+    var backTime = 75-1.67*s;
+    var rad = 45-0.4*s;
+    var time = 4.75*s+4;
+    movement([
+      [-750, 0, backTime],
+      [200, rad*m, time]
+    ]);
 }
 
 const drive = function(connection) {
     connection.on('message', function(message) {
         const response = JSON.parse(message.utf8Data);
-
-        //here we can analyze hits and determine what movements to run
-        //we can use a function to analyze hits
-        //we can use a function to determine movements base on hits
-        //movements must be called outside of this on message, this are only for hit detection
 
         var hit = checkObj(response.payload);
 
