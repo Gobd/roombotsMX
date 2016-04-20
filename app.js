@@ -139,6 +139,8 @@ const drive = function(connection) {
     });
 };
 
+//a stupid comment to test things
+
 client.on('connectFailed', function(error) {
     console.log('Connect Error: ' + error.toString());
 });
